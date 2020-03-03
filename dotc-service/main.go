@@ -17,6 +17,8 @@ func main() {
 		log.Fatalf("Could not connect to DB: %v", err)
 	}
 
+	db.AutoMigrate(&dotc.DataModel{},&dotc.BlockData{})
+
 	// New Service
 	service := micro.NewService(
 		micro.Name("go.micro.srv.dotc"),
