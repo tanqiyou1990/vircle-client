@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package go.micro.srv.dotc;
+
+service Dotc {
+	// rpc Call(Request) returns (Response) {}
+	//Model
+	rpc CreateModel(DataModel) returns (Response) {}
+	// rpc GetModelByName(DataModel) returns (Response) {}
+	rpc DeleteModel(DataModel) returns (Response) {}
+
+	//BlockData
+	rpc CreateBlockData(BlockData) returns (Response) {}
+	// rpc SelectBlockData(BlockData) returns (Response) {}
+}
+
+message DataModel {
+	string dataName = 1;
+	int64 createTime = 2;
+	int64 updateTime = 3;
+}
+
+message BlockData {
+	string id = 1;
+	string modelName = 2;
+	string dataHash = 3;
+	string transHash = 4;
+	int64 transTime = 5;
+	int64 blockHeight = 6;
+	string blockHash = 7;
+	int64 blockTime = 8;
+	int64 createTime = 9;
+	int64 updateTime = 10;
+}
+
+message Request {
+}
+
+message Error {
+    int32 code = 1;
+    string description = 2;
+}
+
+message Response {
+	DataModel datamodel = 1;
+	repeated DataModel datamodels = 2;
+	BlockData blockData = 3;
+	repeated BlockData blockDatas = 4;
+	repeated Error errors = 5;
+	string msg = 6;
+}
