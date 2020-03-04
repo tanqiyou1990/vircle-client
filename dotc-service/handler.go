@@ -6,7 +6,7 @@ import (
 	"errors"
 	"context"
 	"github.com/micro/go-micro/util/log"
-	block "block-service/proto/block"
+	block "github.com/tanqiyou1990/vircle-client/block-service/proto/block"
 	dotc "dotc-service/proto/dotc"
 )
 

@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/micro/go-micro/util/log"
 	"github.com/micro/go-micro"
-	block "block-service/proto/block"
+	block "github.com/tanqiyou1990/vircle-client/block-service/proto/block"
 	dotc "dotc-service/proto/dotc"
 )
 
