@@ -4,7 +4,7 @@ import (
 	"github.com/micro/go-micro/util/log"
 	"github.com/micro/go-micro"
 
-	block "github.com/tanqiyou1990/vircle-client/block-service/proto/block"
+	block "block-service/proto/block"
 )
 
 func main() {
