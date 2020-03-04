@@ -7,7 +7,7 @@ import (
 	"context"
 	"github.com/micro/go-micro/util/log"
 	block "github.com/tanqiyou1990/vircle-client/block-service/proto/block"
-	dotc "dotc-service/proto/dotc"
+	dotc "github.com/tanqiyou1990/vircle-client/dotc-service/proto/dotc"
 )
 
 type Dotc struct{
@@ -55,6 +55,19 @@ func (e *Dotc) DeleteModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.R
 	return nil
 }
 
+func (e *Dotc) SelectByDataHash(ctx context.Context, req *dotc.Request, rsp *dotc.BlockData) error {
+	log.Log("--SelectByDataHash--")
+	if req.DataHash == "" {
+		return errors.New("参数不能为空")
+	}
+	blockdt, err := e.repo.GetByDataHash(req.DataHash)
+	if err != nil {
+		return err
+	}
+	rsp = blockdt
+	return nil
+}
+
 func (e *Dotc) UploadBlockData(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
 	log.Log("--UploadBlockData--")
 	if req.DataName == "" || req.BlockContent == "" {
@@ -71,25 +84,42 @@ func (e *Dotc) UploadBlockData(ctx context.Context, req *dotc.Request, rsp *dotc
 	}
 
 	//上传IPFS
-	ipfsResp, err := e.vesselClient.UploadIpfsContent(ctx.Background(),&block.Request{
-		content: req.BlockContent
-	})
+	ipfsResp, err := e.blockClient.UploadIpfsContent(context.Background(),&block.Request{ Content: req.BlockContent })
 	if err !=nil {
 		return err
 	}
 
-	var blockdt *dotc.BlockData
-	blockdt.ModelName = req.DataName
-	blockdt.DataHash = ipfsResp.Data
-	blockdt.transHash = "-1"
-	blockdt.blockHash = "-1"
-	blockdt.createTime = time.Now().Unix()
-	blockdt.updateTime = time.Now().Unix()
-
+	blockdt := &dotc.BlockData{
+		ModelName:	req.DataName,
+		DataHash:	ipfsResp.Data,
+		TransHash:	"-1",
+		BlockHash:	"-1",
+		CreateTime:	time.Now().Unix(),
+		UpdateTime:	time.Now().Unix(),
+	}
 	err = e.repo.InsertBlockData(blockdt)
 	if err != nil {
 		return err
 	}
+	rsp.Msg = "操作成功"
+	rsp.Data = ipfsResp.Data
+	return nil
+
+}
+
+//根据URL上传文件
+func (e *Dotc) UploadUrl(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
+	log.Log("--UploadUrl--")
+	if req.FileUrl == "" {
+		return errors.New("参数不能为空")
+	}
+
+	//上传IPFS
+	ipfsResp, err := e.blockClient.UploadIpfsUrl(context.Background(),&block.Request{ IpfsUrl: req.FileUrl })
+	if err !=nil {
+		return err
+	}
+
 	rsp.Msg = "操作成功"
 	rsp.Data = ipfsResp.Data
 	return nil

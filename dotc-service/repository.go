@@ -2,7 +2,7 @@ package main
 
 import (
     "github.com/jinzhu/gorm"
-    pb "dotc-service/proto/dotc"
+    pb "github.com/tanqiyou1990/vircle-client/dotc-service/proto/dotc"
 )
 
 type Repository interface {
@@ -13,6 +13,7 @@ type Repository interface {
 	InsertBlockData(*pb.BlockData) error
 	GetAllDatas() ([]*pb.BlockData, error)
 	GetOneData(id string) (*pb.BlockData, error)
+	GetByDataHash(hash string) (*pb.BlockData, error)
 	DeleteBlockData(id string) error
 	GetUnUploadDatas(limit int) ([]*pb.BlockData, error)
 	GetUnUpdateDatas(limit int) ([]*pb.BlockData, error)
@@ -71,6 +72,15 @@ func (repo *DotcRepository) GetAllDatas() ([]*pb.BlockData, error)  {
 func (repo *DotcRepository) GetOneData(id string) (*pb.BlockData, error)  {
 	var bd *pb.BlockData
 	bd.Id = id
+	if err := repo.db.First(&bd).Error; err != nil {
+		return nil, err
+	}
+	return bd, nil
+}
+
+func (repo *DotcRepository) GetByDataHash(hash string) (*pb.BlockData, error) {
+	var bd *pb.BlockData
+	bd.DataHash = hash
 	if err := repo.db.First(&bd).Error; err != nil {
 		return nil, err
 	}
