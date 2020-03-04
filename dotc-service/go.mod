@@ -8,4 +8,5 @@ require (
 	github.com/labstack/gommon v0.3.0
 	github.com/micro/go-micro v1.18.0
 	github.com/satori/go.uuid v1.2.0
+	github.com/tanqiyou1990/vircle-client/block-service v0.0.0-20200304091134-a8d5a8d57e6b // indirect
 )
