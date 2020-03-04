@@ -4,7 +4,7 @@ import (
 	"github.com/micro/go-micro/util/log"
 	"github.com/micro/go-micro"
 	block "github.com/tanqiyou1990/vircle-client/block-service/proto/block"
-	dotc "github.com/tanqiyou1990/vircle-client/dotc-service/proto/dotc"
+	dotc "dotc-service/proto/dotc"
 )
 
 func main() {

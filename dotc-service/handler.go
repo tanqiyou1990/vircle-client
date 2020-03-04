@@ -7,7 +7,7 @@ import (
 	"context"
 	"github.com/micro/go-micro/util/log"
 	block "github.com/tanqiyou1990/vircle-client/block-service/proto/block"
-	dotc "github.com/tanqiyou1990/vircle-client/dotc-service/proto/dotc"
+	dotc "dotc-service/proto/dotc"
 )
 
 type Dotc struct{
