@@ -10,8 +10,9 @@ service Dotc {
 	rpc DeleteModel(DataModel) returns (Response) {}
 
 	//BlockData
-	rpc CreateBlockData(BlockData) returns (Response) {}
-	// rpc SelectBlockData(BlockData) returns (Response) {}
+	rpc UploadBlockData(Request) returns (Response) {}
+	rpc UploadUrl(Request) returns (Response) {}
+	rpc SelectByDataHash(Request) returns (BlockData) {}
 }
 
 message DataModel {
@@ -34,6 +35,10 @@ message BlockData {
 }
 
 message Request {
+	string dataName = 1;
+	string blockContent = 2;
+	string fileUrl = 3;
+	string dataHash = 4;
 }
 
 message Error {
@@ -47,5 +52,7 @@ message Response {
 	BlockData blockData = 3;
 	repeated BlockData blockDatas = 4;
 	repeated Error errors = 5;
-	string msg = 6;
+	int32 code = 6;
+	string msg = 7;
+	string data = 8;
 }

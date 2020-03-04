@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/micro/go-micro/util/log"
 	"github.com/micro/go-micro"
+	block "block-service/proto/block"
 	dotc "dotc-service/proto/dotc"
 )
 
@@ -28,10 +29,12 @@ func main() {
 	// Initialise service
 	service.Init()
 
+	blockClient := block.NewBlockService("go.micro.srv.block", service.Client())
+
 	repo := &DotcRepository{db}
 
 	// Register Handler
-	dotc.RegisterDotcHandler(service.Server(), &Dotc{repo})
+	dotc.RegisterDotcHandler(service.Server(), &Dotc{repo, blockClient})
 
 	// Run service
 	if err := service.Run(); err != nil {

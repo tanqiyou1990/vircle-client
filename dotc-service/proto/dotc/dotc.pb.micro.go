@@ -40,7 +40,9 @@ type DotcService interface {
 	// rpc GetModelByName(DataModel) returns (Response) {}
 	DeleteModel(ctx context.Context, in *DataModel, opts ...client.CallOption) (*Response, error)
 	//BlockData
-	CreateBlockData(ctx context.Context, in *BlockData, opts ...client.CallOption) (*Response, error)
+	UploadBlockData(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
+	UploadUrl(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
+	SelectByDataHash(ctx context.Context, in *Request, opts ...client.CallOption) (*BlockData, error)
 }
 
 type dotcService struct {
@@ -81,9 +83,29 @@ func (c *dotcService) DeleteModel(ctx context.Context, in *DataModel, opts ...cl
 	return out, nil
 }
 
-func (c *dotcService) CreateBlockData(ctx context.Context, in *BlockData, opts ...client.CallOption) (*Response, error) {
-	req := c.c.NewRequest(c.name, "Dotc.CreateBlockData", in)
+func (c *dotcService) UploadBlockData(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error) {
+	req := c.c.NewRequest(c.name, "Dotc.UploadBlockData", in)
 	out := new(Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dotcService) UploadUrl(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error) {
+	req := c.c.NewRequest(c.name, "Dotc.UploadUrl", in)
+	out := new(Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dotcService) SelectByDataHash(ctx context.Context, in *Request, opts ...client.CallOption) (*BlockData, error) {
+	req := c.c.NewRequest(c.name, "Dotc.SelectByDataHash", in)
+	out := new(BlockData)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -100,14 +122,18 @@ type DotcHandler interface {
 	// rpc GetModelByName(DataModel) returns (Response) {}
 	DeleteModel(context.Context, *DataModel, *Response) error
 	//BlockData
-	CreateBlockData(context.Context, *BlockData, *Response) error
+	UploadBlockData(context.Context, *Request, *Response) error
+	UploadUrl(context.Context, *Request, *Response) error
+	SelectByDataHash(context.Context, *Request, *BlockData) error
 }
 
 func RegisterDotcHandler(s server.Server, hdlr DotcHandler, opts ...server.HandlerOption) error {
 	type dotc interface {
 		CreateModel(ctx context.Context, in *DataModel, out *Response) error
 		DeleteModel(ctx context.Context, in *DataModel, out *Response) error
-		CreateBlockData(ctx context.Context, in *BlockData, out *Response) error
+		UploadBlockData(ctx context.Context, in *Request, out *Response) error
+		UploadUrl(ctx context.Context, in *Request, out *Response) error
+		SelectByDataHash(ctx context.Context, in *Request, out *BlockData) error
 	}
 	type Dotc struct {
 		dotc
@@ -128,6 +154,14 @@ func (h *dotcHandler) DeleteModel(ctx context.Context, in *DataModel, out *Respo
 	return h.DotcHandler.DeleteModel(ctx, in, out)
 }
 
-func (h *dotcHandler) CreateBlockData(ctx context.Context, in *BlockData, out *Response) error {
-	return h.DotcHandler.CreateBlockData(ctx, in, out)
+func (h *dotcHandler) UploadBlockData(ctx context.Context, in *Request, out *Response) error {
+	return h.DotcHandler.UploadBlockData(ctx, in, out)
+}
+
+func (h *dotcHandler) UploadUrl(ctx context.Context, in *Request, out *Response) error {
+	return h.DotcHandler.UploadUrl(ctx, in, out)
+}
+
+func (h *dotcHandler) SelectByDataHash(ctx context.Context, in *Request, out *BlockData) error {
+	return h.DotcHandler.SelectByDataHash(ctx, in, out)
 }

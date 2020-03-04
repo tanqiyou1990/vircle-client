@@ -6,11 +6,13 @@ import (
 	"errors"
 	"context"
 	"github.com/micro/go-micro/util/log"
+	block "block-service/proto/block"
 	dotc "dotc-service/proto/dotc"
 )
 
 type Dotc struct{
 	repo Repository
+	blockClient block.BlockService
 }
 
 func (e *Dotc) CreateModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.Response) error {
@@ -53,26 +55,43 @@ func (e *Dotc) DeleteModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.R
 	return nil
 }
 
-func (e *Dotc) CreateBlockData(ctx context.Context, req *dotc.BlockData, rsp *dotc.Response) error {
-	log.Log("--CreateBlockData--")
-	if req.ModelName == "" || req.DataHash == "" {
-		return errors.New("参数异常")
+func (e *Dotc) UploadBlockData(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
+	log.Log("--UploadBlockData--")
+	if req.DataName == "" || req.BlockContent == "" {
+		return errors.New("参数不能为空")
 	}
-	m, err := e.repo.GetOneModel(req.ModelName)
+
+	//检查数据类型是否存在
+	m, err := e.repo.GetOneModel(req.DataName)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("数据类型不存在")
 	}
-	req.TransHash = "-1"
-	req.BlockHash = "-1"
-	req.CreateTime = time.Now().Unix()
-	req.UpdateTime = time.Now().Unix()
-	err = e.repo.InsertBlockData(req)
+
+	//上传IPFS
+	ipfsResp, err := e.vesselClient.UploadIpfsContent(ctx.Background(),&block.Request{
+		content: req.BlockContent
+	})
+	if err !=nil {
+		return err
+	}
+
+	var blockdt *dotc.BlockData
+	blockdt.ModelName = req.DataName
+	blockdt.DataHash = ipfsResp.Data
+	blockdt.transHash = "-1"
+	blockdt.blockHash = "-1"
+	blockdt.createTime = time.Now().Unix()
+	blockdt.updateTime = time.Now().Unix()
+
+	err = e.repo.InsertBlockData(blockdt)
 	if err != nil {
 		return err
 	}
 	rsp.Msg = "操作成功"
+	rsp.Data = ipfsResp.Data
 	return nil
+
 }

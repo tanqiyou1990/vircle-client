@@ -10,9 +10,10 @@ services:
       MICRO_REGISTRY: "mdns"
     command: api --handler=rpc --address=:8080 --namespace=go.micro.srv
     depends_on:
-      - user-service
+      - dotc-service
+      - block-service
 
-  user-service:
+  dotc-service:
     image: dotc-srv
     restart: always
     ports:
@@ -27,6 +28,18 @@ services:
       DB_PASSWORD: "postgres"
     depends_on:
       - database
+
+  block-service:
+    image: block-srv
+    restart: always
+    ports:
+      - 50052:50051
+    environment:
+      MICRO_ADDRESS: ":50051"
+      MICRO_REGISTRY: "mdns"
+      IPFS_URL: "120.76.199.16:9095"
+    depends_on:
+      - dotc-service
 
   # datastore:
   #   image: mongo

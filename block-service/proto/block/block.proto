@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package go.micro.srv.block;
+
+service Block {
+	//IPFS
+	rpc UploadIpfsContent(Request) returns (Response) {}
+	rpc UploadIpfsUrl(Request) returns (Response) {}
+}
+
+
+message Request {
+	string content = 1;
+	string ipfsUrl = 2;
+}
+
+message Response {
+	string msg = 1;
+	string data = 2;
+}
