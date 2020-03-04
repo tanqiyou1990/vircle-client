@@ -2,7 +2,7 @@ package main
 
 import (
     "github.com/jinzhu/gorm"
-    pb "dotc-service/proto/dotc"
+    pb "vircle-client/dotc-service/proto/dotc"
 )
 
 type Repository interface {
