@@ -4,7 +4,7 @@ import (
 	"errors"
 	"context"
 	"github.com/micro/go-micro/util/log"
-	"block-service/ipfs"
+	"github.com/tanqiyou1990/vircle-client/block-service/ipfs"
 	block "github.com/tanqiyou1990/vircle-client/block-service/proto/block"
 	
 )
