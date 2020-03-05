@@ -2,7 +2,7 @@ package main
 
 import (
     "github.com/jinzhu/gorm"
-    pb "vircle-client/dotc-service/proto/dotc"
+    pb "vircle/dotc-service/proto/dotc"
 )
 
 type Repository interface {
@@ -39,9 +39,9 @@ func (repo *DotcRepository) GetAllModels() ([]*pb.DataModel, error)  {
 }
 
 func (repo *DotcRepository) GetOneModel(name string) (*pb.DataModel, error)  {
-	var md *pb.DataModel
+	md := &pb.DataModel{}
 	md.DataName = name
-	if err := repo.db.First(&md).Error; err != nil {
+	if err := repo.db.First(md).Error; err != nil {
 		return nil, err
 	}
 	return md, nil
@@ -70,21 +70,21 @@ func (repo *DotcRepository) GetAllDatas() ([]*pb.BlockData, error)  {
 }
 
 func (repo *DotcRepository) GetOneData(id string) (*pb.BlockData, error)  {
-	var bd *pb.BlockData
+	bd := &pb.BlockData{}
 	bd.Id = id
-	if err := repo.db.First(&bd).Error; err != nil {
+	if err := repo.db.First(bd).Error; err != nil {
 		return nil, err
 	}
 	return bd, nil
 }
 
 func (repo *DotcRepository) GetByDataHash(hash string) (*pb.BlockData, error) {
-	var bd *pb.BlockData
-	bd.DataHash = hash
-	if err := repo.db.First(&bd).Error; err != nil {
+	md := &pb.BlockData{}
+	md.DataHash = hash
+	if err := repo.db.First(md).Error; err != nil {
 		return nil, err
 	}
-	return bd, nil
+	return md, nil
 }
 
 func (repo *DotcRepository) DeleteBlockData(id string) error {

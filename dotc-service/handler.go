@@ -6,8 +6,8 @@ import (
 	"errors"
 	"context"
 	"github.com/micro/go-micro/util/log"
-	block "github.com/tanqiyou1990/vircle-client/block-service/proto/block"
-	dotc "vircle-client/dotc-service/proto/dotc"
+	block "vircle/block-service/proto/block"
+	dotc "vircle/dotc-service/proto/dotc"
 )
 
 type Dotc struct{
@@ -60,11 +60,20 @@ func (e *Dotc) SelectByDataHash(ctx context.Context, req *dotc.Request, rsp *dot
 	if req.DataHash == "" {
 		return errors.New("参数不能为空")
 	}
-	blockdt, err := e.repo.GetByDataHash(req.DataHash)
+	bd, err := e.repo.GetByDataHash(req.DataHash)
 	if err != nil {
 		return err
 	}
-	rsp = blockdt
+	*rsp = *bd
+	return nil
+}
+
+func (e *Dotc) LoadAllBlockDatas(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error  {
+	datas, err := e.repo.GetAllDatas()
+	if err != nil {
+		return err
+	}
+	rsp.BlockDatas = datas
 	return nil
 }
 
@@ -89,20 +98,21 @@ func (e *Dotc) UploadBlockData(ctx context.Context, req *dotc.Request, rsp *dotc
 		return err
 	}
 
-	blockdt := &dotc.BlockData{
-		ModelName:	req.DataName,
-		DataHash:	ipfsResp.Data,
-		TransHash:	"-1",
-		BlockHash:	"-1",
-		CreateTime:	time.Now().Unix(),
-		UpdateTime:	time.Now().Unix(),
-	}
+	blockdt := new(dotc.BlockData)
+	blockdt.ModelName = req.DataName
+	blockdt.DataHash = ipfsResp.Data
+	blockdt.TransHash = "-1"
+	blockdt.BlockHash = "-1"
+	blockdt.CreateTime = time.Now().Unix()
+	blockdt.UpdateTime = time.Now().Unix()
+
 	err = e.repo.InsertBlockData(blockdt)
 	if err != nil {
 		return err
 	}
 	rsp.Msg = "操作成功"
 	rsp.Data = ipfsResp.Data
+	rsp.BlockData = blockdt
 	return nil
 
 }

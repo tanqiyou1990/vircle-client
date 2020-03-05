@@ -6,13 +6,14 @@ service Dotc {
 	// rpc Call(Request) returns (Response) {}
 	//Model
 	rpc CreateModel(DataModel) returns (Response) {}
-	// rpc GetModelByName(DataModel) returns (Response) {}
+	// rpc GetModelByName(Request) returns (Response) {}
 	rpc DeleteModel(DataModel) returns (Response) {}
 
 	//BlockData
 	rpc UploadBlockData(Request) returns (Response) {}
 	rpc UploadUrl(Request) returns (Response) {}
 	rpc SelectByDataHash(Request) returns (BlockData) {}
+	rpc LoadAllBlockDatas(Request) returns (Response) {}
 }
 
 message DataModel {

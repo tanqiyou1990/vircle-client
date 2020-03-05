@@ -37,12 +37,13 @@ type DotcService interface {
 	// rpc Call(Request) returns (Response) {}
 	//Model
 	CreateModel(ctx context.Context, in *DataModel, opts ...client.CallOption) (*Response, error)
-	// rpc GetModelByName(DataModel) returns (Response) {}
+	// rpc GetModelByName(Request) returns (Response) {}
 	DeleteModel(ctx context.Context, in *DataModel, opts ...client.CallOption) (*Response, error)
 	//BlockData
 	UploadBlockData(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
 	UploadUrl(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
 	SelectByDataHash(ctx context.Context, in *Request, opts ...client.CallOption) (*BlockData, error)
+	LoadAllBlockDatas(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
 }
 
 type dotcService struct {
@@ -113,18 +114,29 @@ func (c *dotcService) SelectByDataHash(ctx context.Context, in *Request, opts ..
 	return out, nil
 }
 
+func (c *dotcService) LoadAllBlockDatas(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error) {
+	req := c.c.NewRequest(c.name, "Dotc.LoadAllBlockDatas", in)
+	out := new(Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Dotc service
 
 type DotcHandler interface {
 	// rpc Call(Request) returns (Response) {}
 	//Model
 	CreateModel(context.Context, *DataModel, *Response) error
-	// rpc GetModelByName(DataModel) returns (Response) {}
+	// rpc GetModelByName(Request) returns (Response) {}
 	DeleteModel(context.Context, *DataModel, *Response) error
 	//BlockData
 	UploadBlockData(context.Context, *Request, *Response) error
 	UploadUrl(context.Context, *Request, *Response) error
 	SelectByDataHash(context.Context, *Request, *BlockData) error
+	LoadAllBlockDatas(context.Context, *Request, *Response) error
 }
 
 func RegisterDotcHandler(s server.Server, hdlr DotcHandler, opts ...server.HandlerOption) error {
@@ -134,6 +146,7 @@ func RegisterDotcHandler(s server.Server, hdlr DotcHandler, opts ...server.Handl
 		UploadBlockData(ctx context.Context, in *Request, out *Response) error
 		UploadUrl(ctx context.Context, in *Request, out *Response) error
 		SelectByDataHash(ctx context.Context, in *Request, out *BlockData) error
+		LoadAllBlockDatas(ctx context.Context, in *Request, out *Response) error
 	}
 	type Dotc struct {
 		dotc
@@ -164,4 +177,8 @@ func (h *dotcHandler) UploadUrl(ctx context.Context, in *Request, out *Response)
 
 func (h *dotcHandler) SelectByDataHash(ctx context.Context, in *Request, out *BlockData) error {
 	return h.DotcHandler.SelectByDataHash(ctx, in, out)
+}
+
+func (h *dotcHandler) LoadAllBlockDatas(ctx context.Context, in *Request, out *Response) error {
+	return h.DotcHandler.LoadAllBlockDatas(ctx, in, out)
 }
