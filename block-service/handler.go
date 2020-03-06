@@ -5,6 +5,7 @@ import (
 	"context"
 	"github.com/micro/go-micro/util/log"
 	"vircle/block-service/ipfs"
+	"vircle/block-service/chain"
 	block "vircle/block-service/proto/block"
 	
 )
@@ -39,5 +40,20 @@ func (e *Block) UploadIpfsUrl(ctx context.Context, req *block.Request, rsp *bloc
 	}
 	rsp.Msg = "操作成功"
 	rsp.Data = hash
+	return nil
+}
+
+func (e *Block) UploadBlockData(ctx context.Context, req *block.Request, rsp *block.Response) error {
+	log.Log("-UploadBlockData-")
+	if req.Content == "" {
+		return errors.New("参数不能为空")
+	}
+
+	txid, err := chain.CreateTxWithContent(req.Content)
+	if err != nil {
+		return err
+	}
+	rsp.Msg = "操作成功"
+	rsp.Txid = txid
 	return nil
 }

@@ -44,6 +44,7 @@ type DotcService interface {
 	UploadUrl(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
 	SelectByDataHash(ctx context.Context, in *Request, opts ...client.CallOption) (*BlockData, error)
 	LoadAllBlockDatas(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
+	Upload2BlockChain(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
 }
 
 type dotcService struct {
@@ -124,6 +125,16 @@ func (c *dotcService) LoadAllBlockDatas(ctx context.Context, in *Request, opts .
 	return out, nil
 }
 
+func (c *dotcService) Upload2BlockChain(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error) {
+	req := c.c.NewRequest(c.name, "Dotc.Upload2BlockChain", in)
+	out := new(Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Dotc service
 
 type DotcHandler interface {
@@ -137,6 +148,7 @@ type DotcHandler interface {
 	UploadUrl(context.Context, *Request, *Response) error
 	SelectByDataHash(context.Context, *Request, *BlockData) error
 	LoadAllBlockDatas(context.Context, *Request, *Response) error
+	Upload2BlockChain(context.Context, *Request, *Response) error
 }
 
 func RegisterDotcHandler(s server.Server, hdlr DotcHandler, opts ...server.HandlerOption) error {
@@ -147,6 +159,7 @@ func RegisterDotcHandler(s server.Server, hdlr DotcHandler, opts ...server.Handl
 		UploadUrl(ctx context.Context, in *Request, out *Response) error
 		SelectByDataHash(ctx context.Context, in *Request, out *BlockData) error
 		LoadAllBlockDatas(ctx context.Context, in *Request, out *Response) error
+		Upload2BlockChain(ctx context.Context, in *Request, out *Response) error
 	}
 	type Dotc struct {
 		dotc
@@ -181,4 +194,8 @@ func (h *dotcHandler) SelectByDataHash(ctx context.Context, in *Request, out *Bl
 
 func (h *dotcHandler) LoadAllBlockDatas(ctx context.Context, in *Request, out *Response) error {
 	return h.DotcHandler.LoadAllBlockDatas(ctx, in, out)
+}
+
+func (h *dotcHandler) Upload2BlockChain(ctx context.Context, in *Request, out *Response) error {
+	return h.DotcHandler.Upload2BlockChain(ctx, in, out)
 }

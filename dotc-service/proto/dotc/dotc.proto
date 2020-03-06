@@ -14,6 +14,7 @@ service Dotc {
 	rpc UploadUrl(Request) returns (Response) {}
 	rpc SelectByDataHash(Request) returns (BlockData) {}
 	rpc LoadAllBlockDatas(Request) returns (Response) {}
+	rpc Upload2BlockChain(Request) returns (Response) {}
 }
 
 message DataModel {
@@ -40,6 +41,7 @@ message Request {
 	string blockContent = 2;
 	string fileUrl = 3;
 	string dataHash = 4;
+	string limit = 5;
 }
 
 message Error {
@@ -56,4 +58,5 @@ message Response {
 	int32 code = 6;
 	string msg = 7;
 	string data = 8;
+	map<string, string> resultMap = 9;
 }

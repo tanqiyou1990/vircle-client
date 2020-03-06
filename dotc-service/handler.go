@@ -5,7 +5,9 @@ import (
 	"time"
 	"errors"
 	"context"
+	"strconv"
 	"github.com/micro/go-micro/util/log"
+	microclient "github.com/micro/go-micro/client"
 	block "vircle/block-service/proto/block"
 	dotc "vircle/dotc-service/proto/dotc"
 )
@@ -132,6 +134,68 @@ func (e *Dotc) UploadUrl(ctx context.Context, req *dotc.Request, rsp *dotc.Respo
 
 	rsp.Msg = "操作成功"
 	rsp.Data = ipfsResp.Data
+	return nil
+
+}
+
+
+func (e *Dotc) Upload2BlockChain(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
+	log.Log("--Upload2BlockChain--")
+	var limt int
+	limt = -1
+	if req.Limit != "" {
+		var err error
+		limt, err = strconv.Atoi(req.Limit)
+		if err != nil {
+			return errors.New("参数错误")
+		}
+	}
+
+	dataList,err := e.repo.GetUnUploadDatas(limt)
+	if err != nil {
+		return err
+	}
+
+	if len(dataList) < 1 {
+		rsp.Msg = "无待上链数据"
+		return nil
+	}
+
+	rss := make(map[string]string)
+
+	var opss microclient.CallOption = func(o *microclient.CallOptions) {
+		o.RequestTimeout = time.Second * 30
+		o.DialTimeout = time.Second * 30
+		// o.SetDeadline = time.Second * 30
+	}
+
+	for _,item := range dataList {
+
+		blockRsp,err := e.blockClient.UploadBlockData(context.Background(), &block.Request{ Content: item.DataHash }, opss)
+		if err != nil {
+			log.Log(err)
+			rss[item.DataHash] = "上传失败:" + err.Error()
+			continue;
+		}
+		if len(blockRsp.Txid) < 5 {
+			log.Log("txid异常:", blockRsp.Txid)
+			rss[item.DataHash] = "txid异常:" + blockRsp.Txid
+			continue;
+		}
+		rss[item.DataHash] = "成功:" + blockRsp.Txid
+		item.TransHash = blockRsp.Txid
+		item.UpdateTime = time.Now().Unix()
+		err = e.repo.UpdateBlockDataById(item)
+		if err != nil {
+			log.Log("更新区块数据异常:", blockRsp.Txid)
+			rss[item.DataHash] = "更新区块数据异常:" + err.Error()
+			continue;
+		}
+		log.Log(item)
+	}
+
+	rsp.Msg = "执行完毕"
+	rsp.ResultMap = rss
 	return nil
 
 }

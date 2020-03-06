@@ -3,11 +3,11 @@ package main
 import (
 	"github.com/micro/go-micro/util/log"
 	"github.com/micro/go-micro"
-
 	block "vircle/block-service/proto/block"
 )
 
 func main() {
+
 	// New Service
 	service := micro.NewService(
 		micro.Name("go.micro.srv.block"),

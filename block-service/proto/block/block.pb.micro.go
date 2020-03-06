@@ -37,6 +37,8 @@ type BlockService interface {
 	//IPFS
 	UploadIpfsContent(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
 	UploadIpfsUrl(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
+	//BlockChain
+	UploadBlockData(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
 }
 
 type blockService struct {
@@ -77,18 +79,31 @@ func (c *blockService) UploadIpfsUrl(ctx context.Context, in *Request, opts ...c
 	return out, nil
 }
 
+func (c *blockService) UploadBlockData(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error) {
+	req := c.c.NewRequest(c.name, "Block.UploadBlockData", in)
+	out := new(Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Block service
 
 type BlockHandler interface {
 	//IPFS
 	UploadIpfsContent(context.Context, *Request, *Response) error
 	UploadIpfsUrl(context.Context, *Request, *Response) error
+	//BlockChain
+	UploadBlockData(context.Context, *Request, *Response) error
 }
 
 func RegisterBlockHandler(s server.Server, hdlr BlockHandler, opts ...server.HandlerOption) error {
 	type block interface {
 		UploadIpfsContent(ctx context.Context, in *Request, out *Response) error
 		UploadIpfsUrl(ctx context.Context, in *Request, out *Response) error
+		UploadBlockData(ctx context.Context, in *Request, out *Response) error
 	}
 	type Block struct {
 		block
@@ -107,4 +122,8 @@ func (h *blockHandler) UploadIpfsContent(ctx context.Context, in *Request, out *
 
 func (h *blockHandler) UploadIpfsUrl(ctx context.Context, in *Request, out *Response) error {
 	return h.BlockHandler.UploadIpfsUrl(ctx, in, out)
+}
+
+func (h *blockHandler) UploadBlockData(ctx context.Context, in *Request, out *Response) error {
+	return h.BlockHandler.UploadBlockData(ctx, in, out)
 }

@@ -17,6 +17,7 @@ type Repository interface {
 	DeleteBlockData(id string) error
 	GetUnUploadDatas(limit int) ([]*pb.BlockData, error)
 	GetUnUpdateDatas(limit int) ([]*pb.BlockData, error)
+	UpdateBlockDataById(*pb.BlockData) error
 }
 
 type DotcRepository struct {
@@ -97,14 +98,14 @@ func (repo *DotcRepository) DeleteBlockData(id string) error {
 func (repo *DotcRepository) GetUnUploadDatas(limit int) ([]*pb.BlockData, error)  {
 	var bds []*pb.BlockData
 	if limit < 0 {
-		err := repo.db.Model(&pb.BlockData{}).Where("DataHash <> ? AND TransHash = ?","-1","-1").Find(&bds).Error
+		err := repo.db.Model(&pb.BlockData{}).Where("data_hash <> ? AND trans_hash = ?","-1","-1").Find(&bds).Error
 		if err != nil {
 			return nil, err
 		}
 
 		return bds, nil
 	} else {
-		err := repo.db.Model(&pb.BlockData{}).Where("DataHash <> ? AND TransHash = ?","-1","-1").Limit(limit).Find(&bds).Error
+		err := repo.db.Model(&pb.BlockData{}).Where("data_hash <> ? AND trans_hash = ?","-1","-1").Limit(limit).Find(&bds).Error
 		if err != nil {
 			return nil, err
 		}
@@ -117,18 +118,26 @@ func (repo *DotcRepository) GetUnUploadDatas(limit int) ([]*pb.BlockData, error)
 func (repo *DotcRepository) GetUnUpdateDatas(limit int) ([]*pb.BlockData, error)  {
 	var bds []*pb.BlockData
 	if limit < 0 {
-		err := repo.db.Model(&pb.BlockData{}).Where("DataHash <> ? AND TransHash <> ? AND BlockHash = ?","-1","-1","-1").Find(&bds).Error
+		err := repo.db.Model(&pb.BlockData{}).Where("data_hash <> ? AND trans_hash <> ? AND block_hash = ?","-1","-1","-1").Find(&bds).Error
 		if err != nil {
 			return nil, err
 		}
 
 		return bds, nil
 	} else {
-		err := repo.db.Model(&pb.BlockData{}).Where("DataHash <> ? AND TransHash <> ? AND BlockHash = ?","-1","-1","-1").Limit(limit).Find(&bds).Error
+		err := repo.db.Model(&pb.BlockData{}).Where("data_hash <> ? AND trans_hash <> ? AND block_hash = ?","-1","-1","-1").Limit(limit).Find(&bds).Error
 		if err != nil {
 			return nil, err
 		}
 
 		return bds, nil
 	}
+}
+
+func (repo *DotcRepository) UpdateBlockDataById(d *pb.BlockData) error {
+	err := repo.db.Model(&pb.BlockData{}).Updates(&d).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

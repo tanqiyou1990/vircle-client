@@ -38,6 +38,10 @@ services:
       MICRO_ADDRESS: ":50051"
       MICRO_REGISTRY: "mdns"
       IPFS_URL: "120.76.199.16:9095"
+      RPC_HOST: "47.105.68.82"
+      RPC_PORT: 9062
+      RPC_USER: "chain"
+      RPC_PASSWD: "999000"
     depends_on:
       - dotc-service
 

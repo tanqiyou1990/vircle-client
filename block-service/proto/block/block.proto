@@ -6,6 +6,8 @@ service Block {
 	//IPFS
 	rpc UploadIpfsContent(Request) returns (Response) {}
 	rpc UploadIpfsUrl(Request) returns (Response) {}
+	//BlockChain
+	rpc UploadBlockData(Request) returns (Response) {}
 }
 
 
@@ -17,4 +19,5 @@ message Request {
 message Response {
 	string msg = 1;
 	string data = 2;
+	string txid = 3;
 }
