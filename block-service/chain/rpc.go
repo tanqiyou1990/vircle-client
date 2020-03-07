@@ -1,19 +1,18 @@
 package chain
 
 import (
-	"os"
 	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
+	"os"
 	"strconv"
+	"time"
 )
 
 const (
-	VERSION           = 0.1
 	RPCCLIENT_TIMEOUT = 30
 )
 
@@ -25,10 +24,10 @@ type rpcClient struct {
 	httpClient *http.Client
 }
 
-//连接配置
+// CreateClient 连接配置
 func CreateClient(useSSL bool) (c *rpcClient, err error) {
 	host := os.Getenv("RPC_HOST")
-	port,err := strconv.Atoi(os.Getenv("RPC_PORT"))
+	port, err := strconv.Atoi(os.Getenv("RPC_PORT"))
 	user := os.Getenv("RPC_USER")
 	passwd := os.Getenv("RPC_PASSWD")
 	var serverAddr string
@@ -67,10 +66,10 @@ func (c *rpcClient) doTimeoutRequest(timer *time.Timer, req *http.Request) (*htt
 }
 
 //通信
-func (c *rpcClient) send(reqJson string) (retJSON string, err error) {
+func (c *rpcClient) send(reqJSON string) (retJSON string, err error) {
 	connectTimer := time.NewTimer(RPCCLIENT_TIMEOUT * time.Second)
-	reqJsonByte := []byte(reqJson)
-	payloadBuffer := bytes.NewReader(reqJsonByte)
+	reqJSONByte := []byte(reqJSON)
+	payloadBuffer := bytes.NewReader(reqJSONByte)
 	req, err := http.NewRequest("POST", c.serverAddr, payloadBuffer)
 	if err != nil {
 		return

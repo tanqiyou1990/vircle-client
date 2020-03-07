@@ -20,6 +20,18 @@ type Dotc struct {
 	blockClient block.BlockService
 }
 
+// BlockTransaction 接收链上查询数据
+type BlockTransaction struct {
+	Blockhash string `json:"blockhash"`
+	Time      int64  `json:"time"`
+}
+
+// BlockBody 接收链上查询数据
+type BlockBody struct {
+	Height int64 `json:"height"`
+	Time   int64 `json:"time"`
+}
+
 // CreateModel 创建一个数据类型
 func (e *Dotc) CreateModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.Response) error {
 	if req.DataName == "" {
@@ -33,19 +45,6 @@ func (e *Dotc) CreateModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.R
 	rsp.Msg = "操作成功"
 	return nil
 }
-
-// func (e *Dotc) GetModelByName(ctx context.Context, req *dotc.DataModel, rsp *dotc.Response) error {
-// 	log.Log("--GetModelByName--")
-// 	if req.DataName == "" {
-// 		return errors.New("参数不能为空")
-// 	}
-// 	m, err := e.repo.GetOneModel(req.DataName)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	rsp.DataModel = m
-// 	return nil
-// }
 
 // DeleteModel 删除一个数据类型
 func (e *Dotc) DeleteModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.Response) error {
@@ -255,18 +254,29 @@ func (e *Dotc) UpdateBlockInfo(ctx context.Context, req *dotc.Request, rsp *dotc
 			continue
 		}
 		rss[item.TransHash] = "查询成功"
-		var resultMap map[string]interface{}
+		var resultMap map[string]string
 		if err := json.Unmarshal([]byte(blockRsp.Data), &resultMap); err != nil {
 			log.Log("解析数据异常:", err)
 			rss[item.TransHash] = "解析数据异常:" + err.Error()
 			continue
 		}
-		transactionJSON := (resultMap["transaction"]).(map[string]interface{})
-		blockJSON := (resultMap["blockData"]).(map[string]interface{})
-		item.TransTime = (transactionJSON["time"]).(int64)
-		item.BlockHash = (transactionJSON["blockhash"]).(string)
-		item.BlockHeight = (blockJSON["height"]).(int64)
-		item.BlockTime = (blockJSON["time"]).(int64)
+
+		transactionJSON := new(BlockTransaction)
+		if err := json.Unmarshal([]byte(resultMap["transaction"]), &transactionJSON); err != nil {
+			log.Log("解析数据异常:", err)
+			rss[item.TransHash] = "解析数据异常:" + err.Error()
+			continue
+		}
+		blockJSON := new(BlockBody)
+		if err := json.Unmarshal([]byte(resultMap["blockData"]), &blockJSON); err != nil {
+			log.Log("解析数据异常:", err)
+			rss[item.TransHash] = "解析数据异常:" + err.Error()
+			continue
+		}
+		item.TransTime = transactionJSON.Time
+		item.BlockHash = transactionJSON.Blockhash
+		item.BlockHeight = blockJSON.Height
+		item.BlockTime = blockJSON.Time
 		item.UpdateTime = time.Now().Unix()
 		err = e.repo.UpdateBlockDataById(item)
 		if err != nil {
