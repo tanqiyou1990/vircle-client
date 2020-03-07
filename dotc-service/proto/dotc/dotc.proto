@@ -11,10 +11,11 @@ service Dotc {
 
 	//BlockData
 	rpc UploadBlockData(Request) returns (Response) {}
-	rpc UploadUrl(Request) returns (Response) {}
+	rpc UploadURL(Request) returns (Response) {}
 	rpc SelectByDataHash(Request) returns (BlockData) {}
 	rpc LoadAllBlockDatas(Request) returns (Response) {}
 	rpc Upload2BlockChain(Request) returns (Response) {}
+	rpc UpdateBlockInfo(Request) returns (Response) {}
 }
 
 message DataModel {

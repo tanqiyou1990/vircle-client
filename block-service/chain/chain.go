@@ -2,21 +2,69 @@ package chain
 
 import (
 	"encoding/hex"
-	"strconv"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/micro/go-micro/util/log"
 )
 
+// CheckResult 用于返回数据上链信息查询结果
+type CheckResult struct {
+	Transaction string `json:"transaction"`
+	BlockData   string `json:"blockData"`
+}
 
+// CheckBlockData 返回区块信息的JSON字符串.
+// 参数为交易哈希
+func CheckBlockData(txid string) (string, error) {
+
+	//根据txid查询交易是否打包
+	txOBJ, err := gettransaction(txid)
+	if err != nil {
+		return "", errors.New("查询交易信息失败")
+	}
+	if txOBJ["blockhash"] == nil {
+		return "", errors.New("交易尚未打包区块")
+	}
+	blockHash := (txOBJ["blockhash"]).(string)
+	blockOBJ, err := getblock(blockHash)
+	if err != nil {
+		return "", errors.New("查询区块信息失败")
+	}
+
+	blockJSON, err := json.Marshal(blockOBJ)
+	if err != nil {
+		return "", errors.New("区块数据转换失败")
+	}
+
+	txJSON, err := json.Marshal(txOBJ)
+	if err != nil {
+		return "", errors.New("交易数据转换失败")
+	}
+
+	result := &CheckResult{
+		Transaction: string(txJSON),
+		BlockData:   string(blockJSON),
+	}
+
+	resultJSON, err := json.Marshal(result)
+
+	return string(resultJSON), nil
+}
+
+// CreateTxWithContent 数据上链
+// 参数为待上链的数据字符串
 func CreateTxWithContent(data string) (string, error) {
 
 	//生成一个新地址
-	address,err := newAddress()
+	address, err := newAddress()
 	if err != nil {
 		log.Log(err)
 		return "", err
 	}
-	utxo,err := listUnspent()
+	utxo, err := listUnspent()
 	if err != nil {
 		log.Log(err)
 		return "", err
@@ -27,9 +75,9 @@ func CreateTxWithContent(data string) (string, error) {
 	amount := (utxo["amount"]).(float64)
 
 	//dumpprivkey [UTXO address]
-	dumpPrivkey,err := dumpPrivkey(utxoAddress)
+	dumpPrivkey, err := dumpPrivkey(utxoAddress)
 	if err != nil {
-		log.Log("dumpPrivkey:",err)
+		log.Log("dumpPrivkey:", err)
 		return "", err
 	}
 
@@ -42,11 +90,11 @@ func CreateTxWithContent(data string) (string, error) {
 
 	outputs := make(map[string]interface{})
 	outputs["data"] = hexData
-	outputs[address] = FloatRound(amount - 0.001, 8) 
+	outputs[address] = FloatRound(amount-0.001, 8)
 
-	hex,err := createRawTransaction(inputs, outputs)
+	hex, err := createRawTransaction(inputs, outputs)
 	if err != nil {
-		log.Log("createRawTransaction:",err)
+		log.Log("createRawTransaction:", err)
 		return "", err
 	}
 
@@ -58,29 +106,25 @@ func CreateTxWithContent(data string) (string, error) {
 	utxoInfoMap["amount"] = amount
 	utxoInfoList := [1]interface{}{utxoInfoMap}
 
-	txHex,err := signRawTransactionWithKey(hex, dumpPrivkeyList, utxoInfoList)
+	txHex, err := signRawTransactionWithKey(hex, dumpPrivkeyList, utxoInfoList)
 	if err != nil {
-		log.Log("signRawTransactionWithKey:",err)
+		log.Log("signRawTransactionWithKey:", err)
 		return "", err
 	}
 
-	transactionId,err := sendRawTransaction(txHex)
+	transactionID, err := sendRawTransaction(txHex)
 	if err != nil {
-		log.Log("sendRawTransaction:",err)
+		log.Log("sendRawTransaction:", err)
 		return "", err
 	}
 
-	return transactionId, nil
+	return transactionID, nil
 
 }
 
-// 截取小数位数
+// FloatRound 截取小数位数
 func FloatRound(f float64, n int) float64 {
 	format := "%." + strconv.Itoa(n) + "f"
 	res, _ := strconv.ParseFloat(fmt.Sprintf(format, f), 64)
 	return res
 }
-
-
-
-

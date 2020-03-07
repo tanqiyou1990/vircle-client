@@ -1,31 +1,34 @@
 package main
 
 import (
-	"fmt"
-	"time"
-	"errors"
 	"context"
+	"encoding/json"
+	"errors"
 	"strconv"
-	"github.com/micro/go-micro/util/log"
-	microclient "github.com/micro/go-micro/client"
+	"strings"
+	"time"
 	block "vircle/block-service/proto/block"
 	dotc "vircle/dotc-service/proto/dotc"
+
+	microclient "github.com/micro/go-micro/client"
+	"github.com/micro/go-micro/util/log"
 )
 
-type Dotc struct{
-	repo Repository
+// Dotc 接收链上数据查询结果
+type Dotc struct {
+	repo        Repository
 	blockClient block.BlockService
 }
 
+// CreateModel 创建一个数据类型
 func (e *Dotc) CreateModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.Response) error {
-	log.Log("--CreateModel--")
 	if req.DataName == "" {
 		return errors.New("数据名称不能为空")
 	}
 	req.CreateTime = time.Now().Unix()
 	req.UpdateTime = time.Now().Unix()
 	if err := e.repo.InsertModel(req); err != nil {
-		return errors.New(fmt.Sprintf("error creating DataModel: %v", err))
+		return err
 	}
 	rsp.Msg = "操作成功"
 	return nil
@@ -44,8 +47,8 @@ func (e *Dotc) CreateModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.R
 // 	return nil
 // }
 
+// DeleteModel 删除一个数据类型
 func (e *Dotc) DeleteModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.Response) error {
-	log.Log("--DeleteModel--")
 	if req.DataName == "" {
 		return errors.New("参数不能为空")
 	}
@@ -57,8 +60,8 @@ func (e *Dotc) DeleteModel(ctx context.Context, req *dotc.DataModel, rsp *dotc.R
 	return nil
 }
 
+// SelectByDataHash 根据数据哈希查询数据
 func (e *Dotc) SelectByDataHash(ctx context.Context, req *dotc.Request, rsp *dotc.BlockData) error {
-	log.Log("--SelectByDataHash--")
 	if req.DataHash == "" {
 		return errors.New("参数不能为空")
 	}
@@ -70,7 +73,8 @@ func (e *Dotc) SelectByDataHash(ctx context.Context, req *dotc.Request, rsp *dot
 	return nil
 }
 
-func (e *Dotc) LoadAllBlockDatas(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error  {
+// LoadAllBlockDatas 查询所有数据
+func (e *Dotc) LoadAllBlockDatas(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
 	datas, err := e.repo.GetAllDatas()
 	if err != nil {
 		return err
@@ -79,13 +83,14 @@ func (e *Dotc) LoadAllBlockDatas(ctx context.Context, req *dotc.Request, rsp *do
 	return nil
 }
 
+// UploadBlockData 数据上链
 func (e *Dotc) UploadBlockData(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
-	log.Log("--UploadBlockData--")
 	if req.DataName == "" || req.BlockContent == "" {
 		return errors.New("参数不能为空")
 	}
 
 	//检查数据类型是否存在
+	m := new(dotc.DataModel)
 	m, err := e.repo.GetOneModel(req.DataName)
 	if err != nil {
 		return err
@@ -95,8 +100,19 @@ func (e *Dotc) UploadBlockData(ctx context.Context, req *dotc.Request, rsp *dotc
 	}
 
 	//上传IPFS
-	ipfsResp, err := e.blockClient.UploadIpfsContent(context.Background(),&block.Request{ Content: req.BlockContent })
-	if err !=nil {
+	ipfsResp, err := e.blockClient.UploadIpfsContent(context.Background(), &block.Request{Content: req.BlockContent})
+	if err != nil {
+		return err
+	}
+	bd := new(dotc.BlockData)
+	bd, err = e.repo.GetByDataHash(ipfsResp.Data)
+	if err == nil && bd != nil {
+		rsp.Msg = "操作成功"
+		rsp.Data = ipfsResp.Data
+		rsp.BlockData = bd
+		return nil
+	}
+	if !strings.Contains(err.Error(), "record not found") {
 		return err
 	}
 
@@ -119,16 +135,15 @@ func (e *Dotc) UploadBlockData(ctx context.Context, req *dotc.Request, rsp *dotc
 
 }
 
-//根据URL上传文件
-func (e *Dotc) UploadUrl(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
-	log.Log("--UploadUrl--")
+// UploadURL 根据URL上传文件
+func (e *Dotc) UploadURL(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
 	if req.FileUrl == "" {
 		return errors.New("参数不能为空")
 	}
 
 	//上传IPFS
-	ipfsResp, err := e.blockClient.UploadIpfsUrl(context.Background(),&block.Request{ IpfsUrl: req.FileUrl })
-	if err !=nil {
+	ipfsResp, err := e.blockClient.UploadIpfsURL(context.Background(), &block.Request{IpfsUrl: req.FileUrl})
+	if err != nil {
 		return err
 	}
 
@@ -138,9 +153,8 @@ func (e *Dotc) UploadUrl(ctx context.Context, req *dotc.Request, rsp *dotc.Respo
 
 }
 
-
+// Upload2BlockChain 数据上传到区块链
 func (e *Dotc) Upload2BlockChain(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
-	log.Log("--Upload2BlockChain--")
 	var limt int
 	limt = -1
 	if req.Limit != "" {
@@ -151,7 +165,7 @@ func (e *Dotc) Upload2BlockChain(ctx context.Context, req *dotc.Request, rsp *do
 		}
 	}
 
-	dataList,err := e.repo.GetUnUploadDatas(limt)
+	dataList, err := e.repo.GetUnUploadDatas(limt)
 	if err != nil {
 		return err
 	}
@@ -163,24 +177,23 @@ func (e *Dotc) Upload2BlockChain(ctx context.Context, req *dotc.Request, rsp *do
 
 	rss := make(map[string]string)
 
-	var opss microclient.CallOption = func(o *microclient.CallOptions) {
-		o.RequestTimeout = time.Second * 30
-		o.DialTimeout = time.Second * 30
-		// o.SetDeadline = time.Second * 30
-	}
+	for _, item := range dataList {
 
-	for _,item := range dataList {
-
-		blockRsp,err := e.blockClient.UploadBlockData(context.Background(), &block.Request{ Content: item.DataHash }, opss)
+		ctxx, cancelFn := context.WithTimeout(context.Background(), 50*time.Second)
+		defer cancelFn()
+		blockRsp, err := e.blockClient.UploadBlockData(ctxx, &block.Request{Content: item.DataHash}, func(o *microclient.CallOptions) {
+			o.RequestTimeout = time.Second * 30
+			o.DialTimeout = time.Second * 30
+		})
 		if err != nil {
 			log.Log(err)
 			rss[item.DataHash] = "上传失败:" + err.Error()
-			continue;
+			continue
 		}
 		if len(blockRsp.Txid) < 5 {
 			log.Log("txid异常:", blockRsp.Txid)
 			rss[item.DataHash] = "txid异常:" + blockRsp.Txid
-			continue;
+			continue
 		}
 		rss[item.DataHash] = "成功:" + blockRsp.Txid
 		item.TransHash = blockRsp.Txid
@@ -189,9 +202,78 @@ func (e *Dotc) Upload2BlockChain(ctx context.Context, req *dotc.Request, rsp *do
 		if err != nil {
 			log.Log("更新区块数据异常:", blockRsp.Txid)
 			rss[item.DataHash] = "更新区块数据异常:" + err.Error()
-			continue;
+			continue
 		}
-		log.Log(item)
+	}
+
+	rsp.Msg = "执行完毕"
+	rsp.ResultMap = rss
+	return nil
+
+}
+
+// UpdateBlockInfo 更新区块信息
+func (e *Dotc) UpdateBlockInfo(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
+	var limt int
+	limt = -1
+	if req.Limit != "" {
+		var err error
+		limt, err = strconv.Atoi(req.Limit)
+		if err != nil {
+			return errors.New("参数错误")
+		}
+	}
+
+	dataList, err := e.repo.GetUnUpdateDatas(limt)
+	if err != nil {
+		return err
+	}
+
+	if len(dataList) < 1 {
+		rsp.Msg = "无待更新数据"
+		return nil
+	}
+
+	rss := make(map[string]string)
+
+	for _, item := range dataList {
+
+		ctxx, cancelFn := context.WithTimeout(context.Background(), 50*time.Second)
+		defer cancelFn()
+		blockRsp, err := e.blockClient.GetBlockInfoByTxid(ctxx, &block.Request{Txid: item.TransHash}, func(o *microclient.CallOptions) {
+			o.RequestTimeout = time.Second * 30
+			o.DialTimeout = time.Second * 30
+		})
+		if err != nil {
+			log.Log(err)
+			rss[item.TransHash] = "查询失败:" + err.Error()
+			continue
+		}
+		if len(blockRsp.Data) < 5 {
+			log.Log("返回数据异常:", blockRsp.Data)
+			rss[item.TransHash] = "返回数据异常:" + blockRsp.Data
+			continue
+		}
+		rss[item.TransHash] = "查询成功"
+		var resultMap map[string]interface{}
+		if err := json.Unmarshal([]byte(blockRsp.Data), &resultMap); err != nil {
+			log.Log("解析数据异常:", err)
+			rss[item.TransHash] = "解析数据异常:" + err.Error()
+			continue
+		}
+		transactionJSON := (resultMap["transaction"]).(map[string]interface{})
+		blockJSON := (resultMap["blockData"]).(map[string]interface{})
+		item.TransTime = (transactionJSON["time"]).(int64)
+		item.BlockHash = (transactionJSON["blockhash"]).(string)
+		item.BlockHeight = (blockJSON["height"]).(int64)
+		item.BlockTime = (blockJSON["time"]).(int64)
+		item.UpdateTime = time.Now().Unix()
+		err = e.repo.UpdateBlockDataById(item)
+		if err != nil {
+			log.Log("更新数据异常:", blockRsp.Txid)
+			rss[item.DataHash] = "更新数据异常:" + err.Error()
+			continue
+		}
 	}
 
 	rsp.Msg = "执行完毕"

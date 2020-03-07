@@ -13,6 +13,16 @@ services:
       - dotc-service
       - block-service
 
+  api-web:
+    image: microhq/micro
+    ports: 
+      - 9000:9000
+    environment: 
+      MICRO_REGISTRY: "mdns"
+    command: web --address=0.0.0.0:9000
+    depends_on:
+      - api-server
+
   dotc-service:
     image: dotc-srv
     restart: always

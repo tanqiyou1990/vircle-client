@@ -5,15 +5,17 @@ package go.micro.srv.block;
 service Block {
 	//IPFS
 	rpc UploadIpfsContent(Request) returns (Response) {}
-	rpc UploadIpfsUrl(Request) returns (Response) {}
+	rpc UploadIpfsURL(Request) returns (Response) {}
 	//BlockChain
 	rpc UploadBlockData(Request) returns (Response) {}
+	rpc GetBlockInfoByTxid(Request) returns (Response) {}
 }
 
 
 message Request {
 	string content = 1;
 	string ipfsUrl = 2;
+	string txid = 3;
 }
 
 message Response {
