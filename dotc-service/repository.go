@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// Repository 数据库操作
 type Repository interface {
 	InsertModel(*pb.DataModel) error
 	GetAllModels() ([]*pb.DataModel, error)
@@ -18,13 +19,15 @@ type Repository interface {
 	DeleteBlockData(id string) error
 	GetUnUploadDatas(limit int) ([]*pb.BlockData, error)
 	GetUnUpdateDatas(limit int) ([]*pb.BlockData, error)
-	UpdateBlockDataById(*pb.BlockData) error
+	UpdateBlockDataByID(*pb.BlockData) error
 }
 
+// DotcRepository 返回gorm
 type DotcRepository struct {
 	db *gorm.DB
 }
 
+// InsertModel 创建一个新的数据类型
 func (repo *DotcRepository) InsertModel(d *pb.DataModel) error {
 	if err := repo.db.Create(d).Error; err != nil {
 		return err
@@ -32,6 +35,7 @@ func (repo *DotcRepository) InsertModel(d *pb.DataModel) error {
 	return nil
 }
 
+// GetAllModels 获取所有数据类型
 func (repo *DotcRepository) GetAllModels() ([]*pb.DataModel, error) {
 	var mds []*pb.DataModel
 	if err := repo.db.Find(&mds).Error; err != nil {
@@ -40,6 +44,7 @@ func (repo *DotcRepository) GetAllModels() ([]*pb.DataModel, error) {
 	return mds, nil
 }
 
+// GetOneModel 通过数据类型名称查找
 func (repo *DotcRepository) GetOneModel(name string) (*pb.DataModel, error) {
 	md := new(pb.DataModel)
 	if err := repo.db.Where(&pb.DataModel{DataName: name}).First(&md).Error; err != nil {
@@ -48,6 +53,7 @@ func (repo *DotcRepository) GetOneModel(name string) (*pb.DataModel, error) {
 	return md, nil
 }
 
+// DeleteModel 通过数据类型名称删除
 func (repo *DotcRepository) DeleteModel(name string) error {
 	if err := repo.db.Where(&pb.DataModel{DataName: name}).Delete(pb.DataModel{}).Error; err != nil {
 		return err
@@ -55,6 +61,7 @@ func (repo *DotcRepository) DeleteModel(name string) error {
 	return nil
 }
 
+// InsertBlockData 插入一条上链数据
 func (repo *DotcRepository) InsertBlockData(d *pb.BlockData) error {
 	if err := repo.db.Create(d).Error; err != nil {
 		return err
@@ -62,6 +69,7 @@ func (repo *DotcRepository) InsertBlockData(d *pb.BlockData) error {
 	return nil
 }
 
+// GetAllDatas 获取所有上链数据
 func (repo *DotcRepository) GetAllDatas() ([]*pb.BlockData, error) {
 	var bds []*pb.BlockData
 	if err := repo.db.Find(&bds).Error; err != nil {
@@ -70,6 +78,7 @@ func (repo *DotcRepository) GetAllDatas() ([]*pb.BlockData, error) {
 	return bds, nil
 }
 
+// GetOneData 根据ID查找
 func (repo *DotcRepository) GetOneData(id string) (*pb.BlockData, error) {
 	bd := new(pb.BlockData)
 	if err := repo.db.Model(&pb.BlockData{}).Where("id = ?", id).First(&bd).Error; err != nil {
@@ -78,6 +87,7 @@ func (repo *DotcRepository) GetOneData(id string) (*pb.BlockData, error) {
 	return bd, nil
 }
 
+// GetByDataHash 根据数据哈希查找
 func (repo *DotcRepository) GetByDataHash(hash string) (*pb.BlockData, error) {
 	md := new(pb.BlockData)
 	if err := repo.db.Where(&pb.BlockData{DataHash: hash}).First(&md).Error; err != nil {
@@ -86,6 +96,7 @@ func (repo *DotcRepository) GetByDataHash(hash string) (*pb.BlockData, error) {
 	return md, nil
 }
 
+// DeleteBlockData 根据id删除
 func (repo *DotcRepository) DeleteBlockData(id string) error {
 	if err := repo.db.Where(&pb.BlockData{Id: id}).Delete(pb.BlockData{}).Error; err != nil {
 		return err
@@ -93,6 +104,7 @@ func (repo *DotcRepository) DeleteBlockData(id string) error {
 	return nil
 }
 
+// GetUnUploadDatas 获取固定条数的待上链数据
 func (repo *DotcRepository) GetUnUploadDatas(limit int) ([]*pb.BlockData, error) {
 	var bds []*pb.BlockData
 	if limit < 0 {
@@ -113,6 +125,7 @@ func (repo *DotcRepository) GetUnUploadDatas(limit int) ([]*pb.BlockData, error)
 
 }
 
+// GetUnUpdateDatas 获取固定条数的待更新区块信息的数据
 func (repo *DotcRepository) GetUnUpdateDatas(limit int) ([]*pb.BlockData, error) {
 	var bds []*pb.BlockData
 	if limit < 0 {
@@ -132,7 +145,8 @@ func (repo *DotcRepository) GetUnUpdateDatas(limit int) ([]*pb.BlockData, error)
 	}
 }
 
-func (repo *DotcRepository) UpdateBlockDataById(d *pb.BlockData) error {
+// UpdateBlockDataByID 根据ID 更新
+func (repo *DotcRepository) UpdateBlockDataByID(d *pb.BlockData) error {
 	err := repo.db.Model(&pb.BlockData{}).Updates(&d).Error
 	if err != nil {
 		return err

@@ -207,7 +207,7 @@ func (e *Dotc) Upload2BlockChain(ctx context.Context, req *dotc.Request, rsp *do
 		rss[item.DataHash] = "成功:" + blockRsp.Txid
 		item.TransHash = blockRsp.Txid
 		item.UpdateTime = time.Now().Unix()
-		err = e.repo.UpdateBlockDataById(item)
+		err = e.repo.UpdateBlockDataByID(item)
 		if err != nil {
 			log.Log("更新区块数据异常:", blockRsp.Txid)
 			rss[item.DataHash] = "更新区块数据异常:" + err.Error()
@@ -289,7 +289,7 @@ func (e *Dotc) UpdateBlockInfo(ctx context.Context, req *dotc.Request, rsp *dotc
 		item.BlockHeight = blockJSON.Height
 		item.BlockTime = blockJSON.Time
 		item.UpdateTime = time.Now().Unix()
-		err = e.repo.UpdateBlockDataById(item)
+		err = e.repo.UpdateBlockDataByID(item)
 		if err != nil {
 			log.Log("更新数据异常:", blockRsp.Txid)
 			rss[item.DataHash] = "更新数据异常:" + err.Error()
