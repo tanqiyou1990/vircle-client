@@ -8,6 +8,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
+// CreateDbConnection 创建数据库连接
 func CreateDbConnection() (*gorm.DB, error) {
 
 	// Get database details from environment variables

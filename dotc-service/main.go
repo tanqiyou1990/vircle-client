@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/micro/go-micro/util/log"
-	"github.com/micro/go-micro"
 	block "vircle/block-service/proto/block"
 	dotc "vircle/dotc-service/proto/dotc"
+
+	"github.com/micro/go-micro"
+	"github.com/micro/go-micro/util/log"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 		log.Fatalf("Could not connect to DB: %v", err)
 	}
 
-	db.AutoMigrate(&dotc.DataModel{},&dotc.BlockData{})
+	db.AutoMigrate(&dotc.DataModel{}, &dotc.BlockData{})
 
 	// New Service
 	service := micro.NewService(

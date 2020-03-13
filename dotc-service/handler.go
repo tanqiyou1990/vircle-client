@@ -99,7 +99,12 @@ func (e *Dotc) UploadBlockData(ctx context.Context, req *dotc.Request, rsp *dotc
 	}
 
 	//上传IPFS
-	ipfsResp, err := e.blockClient.UploadIpfsContent(context.Background(), &block.Request{Content: req.BlockContent})
+	ctxx, cancelFn := context.WithTimeout(context.Background(), 50*time.Second)
+	ipfsResp, err := e.blockClient.UploadIpfsContent(ctxx, &block.Request{Content: req.BlockContent}, func(o *microclient.CallOptions) {
+		o.RequestTimeout = time.Second * 30
+		o.DialTimeout = time.Second * 30
+	})
+	defer cancelFn()
 	if err != nil {
 		return err
 	}
@@ -141,7 +146,12 @@ func (e *Dotc) UploadURL(ctx context.Context, req *dotc.Request, rsp *dotc.Respo
 	}
 
 	//上传IPFS
-	ipfsResp, err := e.blockClient.UploadIpfsURL(context.Background(), &block.Request{IpfsUrl: req.FileUrl})
+	ctxx, cancelFn := context.WithTimeout(context.Background(), 50*time.Second)
+	ipfsResp, err := e.blockClient.UploadIpfsURL(ctxx, &block.Request{IpfsUrl: req.FileUrl}, func(o *microclient.CallOptions) {
+		o.RequestTimeout = time.Second * 30
+		o.DialTimeout = time.Second * 30
+	})
+	defer cancelFn()
 	if err != nil {
 		return err
 	}
@@ -179,11 +189,11 @@ func (e *Dotc) Upload2BlockChain(ctx context.Context, req *dotc.Request, rsp *do
 	for _, item := range dataList {
 
 		ctxx, cancelFn := context.WithTimeout(context.Background(), 50*time.Second)
-		defer cancelFn()
 		blockRsp, err := e.blockClient.UploadBlockData(ctxx, &block.Request{Content: item.DataHash}, func(o *microclient.CallOptions) {
 			o.RequestTimeout = time.Second * 30
 			o.DialTimeout = time.Second * 30
 		})
+		defer cancelFn()
 		if err != nil {
 			log.Log(err)
 			rss[item.DataHash] = "上传失败:" + err.Error()
@@ -238,11 +248,12 @@ func (e *Dotc) UpdateBlockInfo(ctx context.Context, req *dotc.Request, rsp *dotc
 	for _, item := range dataList {
 
 		ctxx, cancelFn := context.WithTimeout(context.Background(), 50*time.Second)
-		defer cancelFn()
 		blockRsp, err := e.blockClient.GetBlockInfoByTxid(ctxx, &block.Request{Txid: item.TransHash}, func(o *microclient.CallOptions) {
 			o.RequestTimeout = time.Second * 30
 			o.DialTimeout = time.Second * 30
 		})
+		defer cancelFn()
+
 		if err != nil {
 			log.Log(err)
 			rss[item.TransHash] = "查询失败:" + err.Error()
