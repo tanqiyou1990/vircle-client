@@ -114,15 +114,12 @@ func (repo *DotcRepository) GetUnUploadDatas(limit int) ([]*pb.BlockData, error)
 		}
 
 		return bds, nil
-	} else {
-		err := repo.db.Model(&pb.BlockData{}).Where("data_hash <> ? AND trans_hash = ?", "-1", "-1").Limit(limit).Find(&bds).Error
-		if err != nil {
-			return nil, err
-		}
-
-		return bds, nil
 	}
-
+	err := repo.db.Model(&pb.BlockData{}).Where("data_hash <> ? AND trans_hash = ?", "-1", "-1").Limit(limit).Find(&bds).Error
+	if err != nil {
+		return nil, err
+	}
+	return bds, nil
 }
 
 // GetUnUpdateDatas 获取固定条数的待更新区块信息的数据
@@ -133,16 +130,14 @@ func (repo *DotcRepository) GetUnUpdateDatas(limit int) ([]*pb.BlockData, error)
 		if err != nil {
 			return nil, err
 		}
-
-		return bds, nil
-	} else {
-		err := repo.db.Model(&pb.BlockData{}).Where("data_hash <> ? AND trans_hash <> ? AND block_hash = ?", "-1", "-1", "-1").Limit(limit).Find(&bds).Error
-		if err != nil {
-			return nil, err
-		}
-
 		return bds, nil
 	}
+	err := repo.db.Model(&pb.BlockData{}).Where("data_hash <> ? AND trans_hash <> ? AND block_hash = ?", "-1", "-1", "-1").Limit(limit).Find(&bds).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return bds, nil
 }
 
 // UpdateBlockDataByID 根据ID 更新
