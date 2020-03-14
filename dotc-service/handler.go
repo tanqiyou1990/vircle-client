@@ -10,6 +10,7 @@ import (
 	block "vircle/block-service/proto/block"
 	dotc "vircle/dotc-service/proto/dotc"
 
+	"github.com/jinzhu/gorm"
 	microclient "github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/util/log"
 )
@@ -65,6 +66,10 @@ func (e *Dotc) SelectByDataHash(ctx context.Context, req *dotc.Request, rsp *dot
 		return errors.New("参数不能为空")
 	}
 	bd, err := e.repo.GetByDataHash(req.DataHash)
+	//对于返回空的非异常情况
+	if err == gorm.ErrRecordNotFound {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -75,6 +80,11 @@ func (e *Dotc) SelectByDataHash(ctx context.Context, req *dotc.Request, rsp *dot
 // LoadAllBlockDatas 查询所有数据
 func (e *Dotc) LoadAllBlockDatas(ctx context.Context, req *dotc.Request, rsp *dotc.Response) error {
 	datas, err := e.repo.GetAllDatas()
+	//对于返回空的非异常情况
+	if err == gorm.ErrRecordNotFound {
+		rsp.BlockData = nil
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -91,6 +101,10 @@ func (e *Dotc) UploadBlockData(ctx context.Context, req *dotc.Request, rsp *dotc
 	//检查数据类型是否存在
 	m := new(dotc.DataModel)
 	m, err := e.repo.GetOneModel(req.DataName)
+	//对于返回空的非异常情况
+	if err == gorm.ErrRecordNotFound {
+		return errors.New("数据类型不存在")
+	}
 	if err != nil {
 		return err
 	}
