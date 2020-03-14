@@ -32,7 +32,7 @@ func (e *Block) UploadIpfsURL(ctx context.Context, req *block.Request, rsp *bloc
 		return errors.New("参数不能为空")
 	}
 
-	hash, err := ipfs.UploadUrlFile(req.IpfsUrl)
+	hash, err := ipfs.UploadURLFile(req.IpfsUrl)
 	if err != nil {
 		return err
 	}
