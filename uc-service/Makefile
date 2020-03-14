@@ -4,14 +4,14 @@ GOPATH:=$(shell go env GOPATH)
 
 .PHONY: proto
 proto:
-	protoc --proto_path=${GOPATH}/src:. --micro_out=. --go_out=. proto/user/user.proto
+	protoc --proto_path=${GOPATH}/src:. --micro_out=. --go_out=. proto/uc/uc.proto
 
 .PHONY: build
 build: proto
 
 	GOOS=linux
 	GOARCH=amd64
-	go build -o user-srv *.go
+	go build -o uc-srv *.go
 
 .PHONY: test
 test:
@@ -19,4 +19,4 @@ test:
 
 .PHONY: docker
 docker:
-	docker build . -t user-srv:latest
+	docker build . -t uc-srv:latest

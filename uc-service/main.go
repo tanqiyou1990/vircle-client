@@ -1,7 +1,7 @@
 package main
 
 import (
-	pu "vircle/uc-service/proto/user"
+	pu "vircle/uc-service/proto/uc"
 
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/util/log"
@@ -18,7 +18,7 @@ func main() {
 		log.Fatalf("Could not connect to DB: %v", err)
 	}
 
-	db.AutoMigrate(&pu.User{})
+	db.AutoMigrate(&pu.User{}, &pu.BlockAccount{})
 
 	// New Service
 	service := micro.NewService(

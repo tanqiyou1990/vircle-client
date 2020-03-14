@@ -7,7 +7,7 @@ RUN mkdir /app
 WORKDIR /app
 
 # 将微服务的服务端运行文件拷贝到 /app 下
-ADD dotc-srv /app/dotc-srv
+ADD uc-srv /app/uc-srv
 
 # 运行服务端
-CMD ["./dotc-srv"]
+CMD ["./uc-srv"]

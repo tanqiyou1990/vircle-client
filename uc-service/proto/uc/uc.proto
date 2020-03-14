@@ -5,6 +5,10 @@ package go.micro.srv.uc;
 service Uc {
 	rpc CreateUser(User) returns (Response) {}
 	rpc DeleteUser(Request) returns (Response) {}
+
+	// mnemonic
+	rpc CreateBlockAccount(BlockAccount) returns (Response) {}
+	rpc FindAccountsByUID(Request) returns (Response) {}
 }
 
 
@@ -20,8 +24,21 @@ message User {
 	int64 updateTime = 9;
 }
 
+message BlockAccount {
+	string id = 1;
+	string userId = 2;
+	string mnemonic = 3;
+	string name = 4;
+	string nodeAddress = 5;
+	int32 nodeFlag = 6;
+	string remark = 7;
+	int64 createTime = 8;
+	int64 updateTime = 9;	
+}
+
 message Request {
 	string id = 1;
+	string userId = 2;
 }
 
 message Error {
@@ -32,6 +49,8 @@ message Error {
 message Response {
 	User user = 1;
 	repeated User users = 2;
+	BlockAccount account = 3;
+	repeated BlockAccount accounts = 4;
 	repeated Error errors = 5;
 	int32 code = 6;
 	string msg = 7;
